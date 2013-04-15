@@ -60,6 +60,7 @@ function dateToJulianDay(d) {
   return Math.floor(365.25 * (year + 4716)) + Math.floor(30.6001 * (month + 1)) + day + B - 1524.5;
 }
   
+// The variable names & formulae are best explained here:
 // http://aa.usno.navy.mil/faq/docs/SunApprox.php
 // http://praytime.info/document.html#Calculation
 function calculateTimes(position) {
@@ -100,7 +101,7 @@ function calculateTimes(position) {
   var decRad = Math.asin(Math.sin(eRad) * Math.sin(lRad));
   var dec = deg(decRad);
   var eqt = q / 15.0 - ra;
-  console.log('r', r, 'e', e, 'ra', ra, 'dec', dec, 'eqt', eqt);
+  // console.log('r', r, 'e', e, 'ra', ra, 'dec', dec, 'eqt', eqt);
   
   // calculate times for each prayer
   var timezoneOffset = new Date().getTimezoneOffset() / 60.0;
@@ -131,9 +132,6 @@ function calculateTimes(position) {
   document.getElementById('asr_shafi').innerHTML = decimalToTimeString(asrShafi);
   document.getElementById('maghrib').innerHTML = decimalToTimeString(sunset);
   document.getElementById('isha').innerHTML = decimalToTimeString(isha);
-  
-  
-  //'Fajr: ' + fajr + ', Sunrise: ' + sunrise + ', Zawaal: ' + zawaal + ', Asr: ' + asr + ', Sunset: ' + sunset + ', Isha: ' + isha;
 }
 
 function decimalToTimeString(decimal) {  // 17.5 to 5:30PM

@@ -9,7 +9,7 @@ import (
 func main() {
   pageRead, err := ioutil.ReadFile("ipray.html")
   if err != nil {
-    panic(err.String())
+    panic("Error reading file")
   }
   pageReadString := string(pageRead)
 

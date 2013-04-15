@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<body>
+<div id="times">
+  <table border="1">
+    <tr>
+      <td>Fajr</td>
+      <td id="fajr"></td>
+    </tr>
+    <tr>
+      <td>Sunrise</td>
+      <td id="sunrise"></td>
+    </tr>
+    <tr>
+      <td>Dhuhr (10 minutes after Zawaal)</td>
+      <td id="dhuhr"></td>
+    </tr>
+    <tr>
+      <td>Asr (Shafi'i)</td>
+      <td id="asr_shafi"></td>
+    </tr>
+    <tr>
+      <td>Asr (Hanafi)</td>
+      <td id="asr_hanafi"></td>
+    </tr>
+    <tr>
+      <td>Maghrib</td>
+      <td id="maghrib"></td>
+    </tr>
+    <tr>
+      <td>Isha</td>
+      <td id="isha"></td>
+    </tr>
+  </table>
+</div>
+<script>
+var fajrAngle = 18.0;
+var ishaAngle = 18.0;
+var isHanafi = true;
+
+function getLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(calculateTimes);
+  }
+}
+  
+var MathD = {
+  sin: function(x) {
+    return Math.sin(rad(x));
+  },
+}
+
+// http://aa.usno.navy.mil/faq/docs/SunApprox.php
+// http://praytime.info/document.html#Calculation
+function calculateTimes(position) {
+  // get d, g
+  var d = Date.now() - new Date(2000, 1, 1, 12); // in ms
+  d = d / (1000.0 * 3600.0 * 24.0); // in days
+  var g = 357.529 + 0.98560028 * d; // degrees
+  var gRad = rad(g);
+  gRad = Math.asin(Math.sin(gRad));
+  g = deg(gRad);
+  
+  // get q
+  var q = 280.459 + 0.98564736 * d; // degrees
+  var qRad = rad(q);
+  qRad = Math.asin(Math.sin(qRad));
+  q = deg(qRad);
+  
+  // get l
+  var l = q + 1.915 * Math.sin(gRad) + 0.020 * Math.sin(2 * gRad); // degrees
+  var lRad = rad(l);
+  console.log('d', d, 'g', g, 'q', q, 'l', l);
+
+  // get longitude & latitude
+  var latitudeRad = rad(position.coords.latitude);
+  var longitude = position.coords.longitude;
+  var longitudeRad = rad(longitude);
+  
+  console.log(latitudeRad, longitudeRad);
+
+  // get r, e, ra
+  var r = 1.00014 - 0.01671 * Math.cos(gRad) - 0.00014 * Math.cos(2.0 * gRad);
+  var e = 23.439 - 0.00000036 * d; // degrees
+  var eRad = rad(e);
+  eRad = Math.asin(Math.sin(eRad));
+  e = deg(eRad);
+  var ra = deg(Math.atan2(Math.cos(eRad) * Math.sin(lRad), Math.cos(lRad))) / 15.0;
+  
+  // get dec, eqt
+  var decRad = Math.asin(Math.sin(eRad) * Math.sin(lRad));
+  var dec = deg(decRad);
+  var eqt = q / 15.0 - ra;
+  console.log('r', r, 'e', e, 'ra', ra, 'dec', dec, 'eqt', eqt);
+  
+  // calculate times for each prayer
+  var timezoneOffset = new Date().getTimezoneOffset() / 60.0;
+  // timezoneOffset = 0; // TODO
+  var zawaal = 12.0 - timezoneOffset - (longitude / 15.0) - eqt;
+  var dhuhr = zawaal + (10.0 / 60.0);  // dhuhr is 10 mins after zawaal
+  var sunrise = zawaal - T(rad(0.8333), latitudeRad, decRad);
+  var sunset = zawaal + T(rad(0.8333), latitudeRad, decRad);
+  
+  console.log('zawaal', zawaal, 'sunrise', sunrise, 'sunset', sunset);
+
+  var fajrAngleRad = rad(fajrAngle);
+  var ishaAngleRad = rad(ishaAngle);
+  
+  console.log('fajr, latitude, dec:', fajrAngleRad, latitudeRad, decRad);
+  var fajr = zawaal - T(fajrAngleRad, latitudeRad, decRad);
+  var isha = zawaal + T(ishaAngleRad, latitudeRad, decRad);
+  
+  console.log('fajr', fajr, isha, 'isha');
+
+  var asr = zawaal + A(2, latitudeRad, decRad);
+  var asrShafi = zawaal + A(1, latitudeRad, decRad)
+  
+  var maghrib = zawaal + T(rad(4), latitudeRad, decRad);
+  document.getElementById('fajr').innerHTML = fajr;
+  document.getElementById('sunrise').innerHTML = sunrise;
+  document.getElementById('dhuhr').innerHTML = dhuhr;
+  document.getElementById('asr_hanafi').innerHTML = asr;
+  document.getElementById('asr_shafi').innerHTML = asrShafi;
+  document.getElementById('maghrib').innerHTML = sunset;
+  document.getElementById('isha').innerHTML = isha;
+  
+  
+  //'Fajr: ' + fajr + ', Sunrise: ' + sunrise + ', Zawaal: ' + zawaal + ', Asr: ' + asr + ', Sunset: ' + sunset + ', Isha: ' + isha;
+}
+
+function rad(degrees) {
+  return degrees * Math.PI / 180.0;
+}
+
+function deg(radians) {
+  return radians * 180.0 / Math.PI;
+}
+
+function T(angleRad, latitudeRad, decRad) {
+  return (1.0 / 15.0) * deg(
+                            Math.acos(
+                                      (-Math.sin(angleRad) - Math.sin(latitudeRad) * Math.sin(decRad)) /
+                                      (Math.cos(latitudeRad) * Math.cos(decRad))
+                                      )
+                            );
+}
+
+function A(k, latitudeRad, decRad) {
+  return (1.0 / 15.0) * deg(Math.acos(
+                                  (Math.sin(Math.atan(1 / (k + Math.tan(latitudeRad - decRad)))) - Math.sin(latitudeRad) * Math.sin(decRad)) /
+                                  (Math.cos(latitudeRad) * Math.cos(decRad))
+                                  ));
+}
+
+getLocation();
+console.log('got location');
+</script>
+</body>
+</html>

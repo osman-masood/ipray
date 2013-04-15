@@ -7,13 +7,14 @@ import (
 )
 
 func main() {
-  pageRead, error := ioutil.ReadFile("ipray.html")
-  if error != nil {
-    panic(error.String())
+  pageRead, err := ioutil.ReadFile("ipray.html")
+  if err != nil {
+    panic(err.String())
   }
+  pageReadString := string(pageRead)
 
   goweb.MapFunc("/", func(c *goweb.Context) {
-    fmt.Fprintf(c.ResponseWriter, string(pageRead))
+    fmt.Fprintf(c.ResponseWriter, pageReadString)
   })
 
   goweb.ListenAndServe(":80")

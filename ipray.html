@@ -79,14 +79,14 @@ function calculateTimes(position) {
   // get l
   var l = q + 1.915 * Math.sin(gRad) + 0.020 * Math.sin(2 * gRad); // degrees
   var lRad = rad(l);
-  console.log('d', d, 'g', g, 'q', q, 'l', l);
+  // console.log('d', d, 'g', g, 'q', q, 'l', l);
 
   // get longitude & latitude
   var latitudeRad = rad(position.coords.latitude);
   var longitude = position.coords.longitude;
   var longitudeRad = rad(longitude);
   
-  console.log(latitudeRad, longitudeRad);
+  // console.log(latitudeRad, longitudeRad);
 
   // get r, e, ra
   var r = 1.00014 - 0.01671 * Math.cos(gRad) - 0.00014 * Math.cos(2.0 * gRad);
@@ -109,16 +109,16 @@ function calculateTimes(position) {
   var sunrise = zawaal - T(rad(0.8333), latitudeRad, decRad);
   var sunset = zawaal + T(rad(0.8333), latitudeRad, decRad);
   
-  console.log('zawaal', zawaal, 'sunrise', sunrise, 'sunset', sunset);
+  // console.log('zawaal', zawaal, 'sunrise', sunrise, 'sunset', sunset);
 
   var fajrAngleRad = rad(fajrAngle);
   var ishaAngleRad = rad(ishaAngle);
   
-  console.log('fajr, latitude, dec:', fajrAngleRad, latitudeRad, decRad);
+  // console.log('fajr, latitude, dec:', fajrAngleRad, latitudeRad, decRad);
   var fajr = zawaal - T(fajrAngleRad, latitudeRad, decRad);
   var isha = zawaal + T(ishaAngleRad, latitudeRad, decRad);
   
-  console.log('fajr', fajr, isha, 'isha');
+  // console.log('fajr', fajr, isha, 'isha');
 
   var asr = zawaal + A(2, latitudeRad, decRad);
   var asrShafi = zawaal + A(1, latitudeRad, decRad)

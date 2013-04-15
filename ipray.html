@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <body>
-<div id="times">
+<div>
   <table border="1">
     <tr>
-      <td>Fajr</td>
+      <td>Fajr (18 degrees)</td>
       <td id="fajr">Computing...</td>
     </tr>
     <tr>
@@ -28,7 +28,7 @@
       <td id="maghrib">Computing...</td>
     </tr>
     <tr>
-      <td>Isha</td>
+      <td>Isha (18 degrees)</td>
       <td id="isha">Computing...</td>
     </tr>
   </table>
@@ -43,19 +43,28 @@ function getLocation() {
     navigator.geolocation.getCurrentPosition(calculateTimes);
   }
 }
-  
-var MathD = {
-  sin: function(x) {
-    return Math.sin(rad(x));
-  },
-}
 
+// with a little help from http://praytimes.org/code/v2/js/PrayTimes.js
+function dateToJulianDay(d) {
+  var month = d.getMonth() + 1;
+  var year = d.getFullYear();
+  var day = d.getDate();
+    
+  if (month <= 2) {
+    year -= 1;
+    month += 12;
+  }
+  var A = Math.floor(year / 100);
+  var B = 2 - A + Math.floor(A / 4);
+      
+  return Math.floor(365.25 * (year + 4716)) + Math.floor(30.6001 * (month + 1)) + day + B - 1524.5;
+}
+  
 // http://aa.usno.navy.mil/faq/docs/SunApprox.php
 // http://praytime.info/document.html#Calculation
 function calculateTimes(position) {
   // get d, g
-  var d = Date.now() - new Date(2000, 1, 1, 12); // in ms
-  d = d / (1000.0 * 3600.0 * 24.0); // in days
+  var d = dateToJulianDay(new Date()) - 2451545.0;
   var g = 357.529 + 0.98560028 * d; // degrees
   var gRad = rad(g);
   gRad = Math.asin(Math.sin(gRad));
@@ -95,7 +104,6 @@ function calculateTimes(position) {
   
   // calculate times for each prayer
   var timezoneOffset = new Date().getTimezoneOffset() / 60.0;
-  // timezoneOffset = 0; // TODO
   var zawaal = 12.0 - timezoneOffset - (longitude / 15.0) - eqt;
   var dhuhr = zawaal + (10.0 / 60.0);  // dhuhr is 10 mins after zawaal
   var sunrise = zawaal - T(rad(0.8333), latitudeRad, decRad);
@@ -116,16 +124,30 @@ function calculateTimes(position) {
   var asrShafi = zawaal + A(1, latitudeRad, decRad)
   
   var maghrib = zawaal + T(rad(4), latitudeRad, decRad);
-  document.getElementById('fajr').innerHTML = fajr;
-  document.getElementById('sunrise').innerHTML = sunrise;
-  document.getElementById('dhuhr').innerHTML = dhuhr;
-  document.getElementById('asr_hanafi').innerHTML = asr;
-  document.getElementById('asr_shafi').innerHTML = asrShafi;
-  document.getElementById('maghrib').innerHTML = sunset;
-  document.getElementById('isha').innerHTML = isha;
+  document.getElementById('fajr').innerHTML = decimalToTimeString(fajr);
+  document.getElementById('sunrise').innerHTML = decimalToTimeString(sunrise);
+  document.getElementById('dhuhr').innerHTML = decimalToTimeString(dhuhr);
+  document.getElementById('asr_hanafi').innerHTML = decimalToTimeString(asr);
+  document.getElementById('asr_shafi').innerHTML = decimalToTimeString(asrShafi);
+  document.getElementById('maghrib').innerHTML = decimalToTimeString(sunset);
+  document.getElementById('isha').innerHTML = decimalToTimeString(isha);
   
   
   //'Fajr: ' + fajr + ', Sunrise: ' + sunrise + ', Zawaal: ' + zawaal + ', Asr: ' + asr + ', Sunset: ' + sunset + ', Isha: ' + isha;
+}
+
+function decimalToTimeString(decimal) {  // 17.5 to 5:30PM
+  var suffix;
+  if (decimal >= 12.0) {
+    suffix = "PM";
+    decimal -= 12;
+  } else {
+    suffix = "AM";
+  }
+  
+  var hour = Math.floor(decimal < 1.0 ? "12" : decimal.toString());
+  var minutes = Math.ceil(60.0 * (decimal - Math.floor(decimal)));
+  return hour + ":" + (minutes < 10.0 ? "0" + minutes : minutes) + " " + suffix;
 }
 
 function rad(degrees) {
@@ -137,8 +159,7 @@ function deg(radians) {
 }
 
 function T(angleRad, latitudeRad, decRad) {
-  return (1.0 / 15.0) * deg(
-                            Math.acos(
+  return (1.0 / 15.0) * deg(Math.acos(
                                       (-Math.sin(angleRad) - Math.sin(latitudeRad) * Math.sin(decRad)) /
                                       (Math.cos(latitudeRad) * Math.cos(decRad))
                                       )
